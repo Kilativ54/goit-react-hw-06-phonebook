@@ -1,28 +1,27 @@
-import PropTypes from 'prop-types';
-import { useState } from 'react';
-import { nanoid } from 'nanoid';
+import { useDispatch, useSelector } from 'react-redux';
+import { getContacts } from 'redux/selectors';
+import Notiflix from 'notiflix';
+import { addContact } from 'redux/contactsSlice';
 
 import { Form, Label, Input, Button } from './ContactForm.styled';
 
-export const ContactForm = ({ handleSubmit }) => {
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
+export function ContactForm() {
+  const contacts = useSelector(getContacts);
+  const dispatch = useDispatch();
 
-  const handleChangeName = e => {
-    const { value } = e.target;
-    setName(value);
-  };
+  const handleFormSubmit = evt => {
+    evt.preventDefault();
+    const form = evt.target;
+    const { name, number } = form.elements;
 
-  const handleChangeNumber = e => {
-    const { value } = e.target;
-    setNumber(value);
-  };
-
-  const handleFormSubmit = e => {
-    e.preventDefault();
-    const form = e.currentTarget;
-
-    handleSubmit({ id: nanoid(), name: name, number: number });
+    if (contacts.some(contact => contact.name === name.value)) {
+      Notiflix.Report.warning(
+        'Warning',
+        `${name.value} is already in contacts.`
+      );
+    } else {
+      dispatch(addContact(name.value, number.value));
+    }
     form.reset();
   };
 
@@ -36,9 +35,7 @@ export const ContactForm = ({ handleSubmit }) => {
         title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
         required
         placeholder="Enter name"
-        value={name}
-        onChange={handleChangeName}
-      />
+             />
       <Label>Number </Label>
       <Input
         type="tel"
@@ -47,14 +44,10 @@ export const ContactForm = ({ handleSubmit }) => {
         title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
         required
         placeholder="Enter phone number"
-        value={number}
-        onChange={handleChangeNumber}
-      />
+         />
       <Button type="submit">Add contact</Button>
     </Form>
   );
 };
 
-ContactForm.propTypes = {
-  handleSubmit: PropTypes.func.isRequired,
-};
+
